@@ -1,0 +1,15 @@
+{
+  "name": "四賤客小旅行 ・ 東北自駕",
+  "short_name": "四賤客小旅行",
+  "description": "東北 9 天 8 夜自駕行程、順路餐廳、一鍵導航與天氣",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f5ef",
+  "theme_color": "#0F6E56",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

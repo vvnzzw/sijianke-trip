@@ -1,0 +1,267 @@
+// 四賤客小旅行 — 畫面與互動邏輯（vanilla JS，無框架）
+(function () {
+  "use strict";
+  var T = window.TRIP;
+  var state = { view: "day", dayIdx: 0 };
+  var $main = document.getElementById("main");
+  var $strip = document.getElementById("datestrip");
+
+  // ---- 單色線條 SVG 圖示（禁 emoji） ----
+  function svg(path, o) {
+    o = o || {};
+    var s = o.size || 18;
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px">' +
+      path + '</svg>';
+  }
+  var ICON = {
+    nav: svg('<polygon points="3 11 22 2 13 21 11 13 3 11"/>'),
+    clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    pin: svg('<path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+    car: svg('<path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M4 13h16v4H4z"/><circle cx="7.5" cy="17.5" r="1.3"/><circle cx="16.5" cy="17.5" r="1.3"/>'),
+    bed: svg('<path d="M3 18V8h12a4 4 0 0 1 4 4v6"/><path d="M3 13h16"/><path d="M7 11h2"/>'),
+    umbrella: svg('<path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9z"/><path d="M12 12v7a2 2 0 0 0 4 0"/>'),
+    food: svg('<path d="M5 3v7a2 2 0 0 0 4 0V3"/><path d="M7 10v11"/><path d="M16 3c-1.5 0-2.5 1.8-2.5 4.5S15 21 16 21s2.5-1 2.5-9S17.5 3 16 3z"/>'),
+    sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>'),
+    cloud: svg('<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 18z"/>'),
+    rain: svg('<path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 15"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/>'),
+    snow: svg('<path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 15"/><path d="M10 19h.01M14 19h.01M12 21h.01"/>'),
+    grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>')
+  };
+
+  // ---- 工具 ----
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoOf(day) {
+    var m = day.date.split("/"); // "6/21"
+    return T.year + "-" + pad(parseInt(m[0], 10)) + "-" + pad(parseInt(m[1], 10));
+  }
+  function todayIso() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function enc(s) { return encodeURIComponent(s); }
+  // 不帶 origin → Google Maps 自動用目前位置(GPS)當起點；travelmode=driving 直接進開車模式
+  function navUrl(q) { return "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + enc(q); }
+  function searchUrl(q) { return "https://www.google.com/maps/search/?api=1&query=" + enc(q); }
+  function embedUrl(q) {
+    if (!T.mapsEmbedKey) return null;
+    return "https://www.google.com/maps/embed/v1/place?key=" + T.mapsEmbedKey + "&q=" + enc(q);
+  }
+
+  // ---- 營業徽章推算（裝置時間 × 快照 hours） ----
+  // hours 形如 "11:00–22:00" / "11:00–翌02:00" / 含「依店家」「黎明」等 → unknown
+  function openBadge(r) {
+    var wdMap = ["日", "一", "二", "三", "四", "五", "六"];
+    var nowWd = wdMap[new Date().getDay()];
+    if (r.closedDay && r.closedDay.indexOf(nowWd) !== -1 && r.closedDay.indexOf("週") !== -1) {
+      return { cls: "closed", txt: "今日公休" };
+    }
+    var m = (r.hours || "").match(/(\d{1,2}):(\d{2}).*?(翌)?(\d{1,2}):(\d{2})/);
+    if (!m) return { cls: "unknown", txt: "見營業時間" };
+    var now = new Date(); var cur = now.getHours() * 60 + now.getMinutes();
+    var start = (+m[1]) * 60 + (+m[2]);
+    var end = (+m[4]) * 60 + (+m[5]); if (m[3]) end += 24 * 60; // 翌日
+    var open = (cur >= start && cur <= end) || (cur + 1440 <= end);
+    return open ? { cls: "open", txt: "推算營業中" } : { cls: "closed", txt: "推算已打烊" };
+  }
+  function vegTag(v) {
+    if (v === true) return '<span class="veg">素友善</span>';
+    if (v === "partial") return '<span class="veg" style="opacity:.75">部分素</span>';
+    return "";
+  }
+
+  // ---- 天氣（Open-Meteo，免 key，含離線快取） ----
+  var WMO = {
+    clear: { codes: [0, 1], icon: "sun", txt: "晴" },
+    cloud: { codes: [2, 3, 45, 48], icon: "cloud", txt: "多雲" },
+    rain: { codes: [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99], icon: "rain", txt: "有雨" },
+    snow: { codes: [71, 73, 75, 77, 85, 86], icon: "snow", txt: "雪" }
+  };
+  function codeInfo(c) {
+    for (var k in WMO) if (WMO[k].codes.indexOf(c) !== -1) return WMO[k];
+    return { icon: "cloud", txt: "—" };
+  }
+  var weatherCache = {};
+  function loadWeatherCache() {
+    try { weatherCache = JSON.parse(localStorage.getItem("sjk_weather") || "{}"); } catch (e) { weatherCache = {}; }
+  }
+  function saveWeatherCache() {
+    try { localStorage.setItem("sjk_weather", JSON.stringify(weatherCache)); } catch (e) {}
+  }
+  function fetchWeather() {
+    // 依不重複座標分組抓取整段行程預報
+    var groups = {};
+    T.days.forEach(function (d) {
+      var key = d.coord.lat + "," + d.coord.lng;
+      groups[key] = d.coord;
+    });
+    var start = isoOf(T.days[0]), end = isoOf(T.days[T.days.length - 1]);
+    Object.keys(groups).forEach(function (key) {
+      var c = groups[key];
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + c.lat + "&longitude=" + c.lng +
+        "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+        "&timezone=Asia%2FTokyo&start_date=" + start + "&end_date=" + end;
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j.daily) return;
+        var dd = j.daily;
+        for (var i = 0; i < dd.time.length; i++) {
+          weatherCache[key + "|" + dd.time[i]] = {
+            code: dd.weathercode[i], hi: Math.round(dd.temperature_2m_max[i]),
+            lo: Math.round(dd.temperature_2m_min[i]), pop: dd.precipitation_probability_max[i]
+          };
+        }
+        weatherCache._fetched = todayIso() + " " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes());
+        saveWeatherCache();
+        if (state.view === "day") renderDay(); // 抓到後刷新當前天氣
+      }).catch(function () {/* 離線：用快取 */ });
+    });
+  }
+  function weatherFor(day) {
+    var key = day.coord.lat + "," + day.coord.lng + "|" + isoOf(day);
+    return weatherCache[key] || null;
+  }
+
+  // ---- 渲染：日期切換列 ----
+  function renderStrip() {
+    $strip.innerHTML = T.days.map(function (d, i) {
+      var cur = i === state.dayIdx ? ' aria-current="true"' : "";
+      return '<div class="daychip" role="button" tabindex="0" data-idx="' + i + '"' + cur + '>' +
+        '<div class="wd">' + d.weekday + '</div><div class="dt">' + d.date + '</div>' +
+        '<div class="dn">D' + d.day + '</div></div>';
+    }).join("");
+    var active = $strip.querySelector('[aria-current="true"]');
+    if (active && active.scrollIntoView) active.scrollIntoView({ inline: "center", block: "nearest" });
+  }
+
+  // ---- 渲染：餐廳卡 ----
+  function restaurantCard(r) {
+    var b = openBadge(r);
+    var emb = embedUrl(r.embedQ || r.q);
+    var map = emb
+      ? '<iframe class="map-embed" loading="lazy" src="' + emb + '"></iframe>'
+      : '<div class="map-ph">' + ICON.pin + ' 點「導航」開 Google Maps</div>';
+    return '<div class="rcard">' +
+      '<div class="rcard-top"><div><div class="rn">' + r.name + vegTag(r.veg) + '</div>' +
+      '<div class="rt">' + r.type + ' ・ ' + r.area + '</div></div>' +
+      '<span class="badge ' + b.cls + '">' + b.txt + '</span></div>' +
+      '<div class="rhours">' + ICON.clock + ' ' + r.hours +
+      (r.closedDay && r.closedDay !== "—" ? ' ・ 公休 ' + r.closedDay : "") +
+      ' <span class="chk">・查核 ' + r.checked + '</span></div>' +
+      (r.note ? '<div class="rnote">' + r.note + '</div>' : "") +
+      map +
+      '<div class="rbtns"><a class="btn-nav" href="' + navUrl(r.q) + '" target="_blank" rel="noopener">' + ICON.nav + ' 導航</a>' +
+      '<a class="btn-ghost" href="' + searchUrl(r.q) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">看詳情</a></div>' +
+      '</div>';
+  }
+
+  // ---- 渲染：每日行程 ----
+  function renderDay() {
+    var d = T.days[state.dayIdx];
+    var w = weatherFor(d);
+    var wHtml;
+    if (w) {
+      var ci = codeInfo(w.code);
+      var warn = (w.pop != null && w.pop >= 60) || ci.icon === "rain";
+      wHtml = '<div class="weather' + (warn ? " warn" : "") + '">' + ICON[ci.icon] + " " +
+        w.hi + "° / " + w.lo + "° ・ " + ci.txt + (w.pop != null ? " ・ 降雨" + w.pop + "%" : "") + "</div>";
+    } else {
+      wHtml = '<div class="weather"><span class="muted">天氣載入中／離線無快取</span></div>';
+    }
+    var spots = (d.spots || []).map(function (s) {
+      return '<div class="spot"><span class="nm">' + s.name + '</span>' +
+        '<a class="btn-nav" href="' + navUrl(s.q) + '" target="_blank" rel="noopener">' + ICON.nav + ' 導航</a></div>';
+    }).join("");
+    var rests = (d.restaurants || []).map(restaurantCard).join("");
+    $main.innerHTML =
+      '<div class="day-head"><span class="day-meta">Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")</span>" + wHtml + "</div>" +
+      '<h2 class="route">' + d.route + "</h2>" +
+      '<div class="stat-row"><div class="stat drive"><div class="k">' + ICON.car + ' 開車</div><div class="v">' + d.driveTime + '</div></div>' +
+      '<div class="stat hotel"><div class="k">' + ICON.bed + ' 住宿</div><div class="v">' + d.hotel + '</div></div></div>' +
+      note("今日節奏", d.pace) + note("午餐", d.lunch) + note("晚餐", d.dinner) +
+      noteRain("雨天備案", d.rainPlan) +
+      (spots ? '<div class="section-title">' + ICON.pin + ' 景點導航</div>' + spots : "") +
+      (rests ? '<div class="section-title">' + ICON.food + ' 順路餐廳</div>' +
+        '<div class="disclaimer">營業時間為快照、徽章為依裝置時間推算，僅供參考，請以現場為準。</div>' + rests : "");
+  }
+  function note(lab, txt) {
+    if (!txt || txt === "—") return "";
+    return '<div class="note"><div class="lab">' + lab + '</div><div class="txt">' + txt + "</div></div>";
+  }
+  function noteRain(lab, txt) {
+    if (!txt) return "";
+    return '<div class="note rain"><div class="lab">' + ICON.umbrella + " " + lab + '</div><div class="txt">' + txt + "</div></div>";
+  }
+
+  // ---- 渲染：9 天總覽 ----
+  function renderOverview() {
+    var rows = T.days.map(function (d, i) {
+      var w = weatherFor(d), wt = "";
+      if (w) { var ci = codeInfo(w.code); wt = " ・ " + ci.txt + " " + w.hi + "°/" + w.lo + "°"; }
+      return '<div class="overview-day" data-idx="' + i + '">' +
+        '<div class="oh"><div><div class="od">Day ' + d.day + " ・ " + d.date + " (" + d.weekday + ")" + wt + "</div>" +
+        '<div class="or">' + d.route + '</div></div></div>' +
+        '<div class="om">' + ICON.car + " " + d.driveTime + " ・ " + ICON.bed + " " + d.hotel + "</div></div>";
+    }).join("");
+    var checks = '<div class="checks"><div class="section-title">出發前最後確認</div><ul>' +
+      T.preTripChecks.map(function (c) { return "<li>" + c + "</li>"; }).join("") + "</ul></div>";
+    $main.innerHTML = rows + checks;
+  }
+
+  // ---- 渲染：全部餐廳 ----
+  function renderFood() {
+    var html = T.days.map(function (d) {
+      if (!d.restaurants || !d.restaurants.length) return "";
+      return '<div class="section-title">Day ' + d.day + " ・ " + d.date + " ・ " + d.route + "</div>" +
+        d.restaurants.map(restaurantCard).join("");
+    }).join("");
+    $main.innerHTML = '<div class="disclaimer">營業時間為快照、徽章為依裝置時間推算，僅供參考，請以現場為準。</div>' + html;
+  }
+
+  // ---- 視圖切換 ----
+  function setView(v) {
+    state.view = v;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.setAttribute("aria-selected", t.getAttribute("data-view") === v ? "true" : "false");
+    });
+    $strip.classList.toggle("hidden", v !== "day");
+    if (v === "day") renderDay();
+    else if (v === "overview") renderOverview();
+    else renderFood();
+    window.scrollTo(0, 0);
+  }
+
+  // ---- 事件 ----
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { setView(t.getAttribute("data-view")); });
+  });
+  document.getElementById("btn-overview").addEventListener("click", function () {
+    setView(state.view === "overview" ? "day" : "overview");
+  });
+  $strip.addEventListener("click", function (e) {
+    var chip = e.target.closest(".daychip"); if (!chip) return;
+    state.dayIdx = +chip.getAttribute("data-idx"); renderStrip(); renderDay();
+  });
+  $main.addEventListener("click", function (e) {
+    var od = e.target.closest(".overview-day"); if (!od) return;
+    state.dayIdx = +od.getAttribute("data-idx"); setView("day"); renderStrip();
+  });
+
+  // ---- 啟動 ----
+  document.getElementById("brand-title").textContent = T.title;
+  document.getElementById("brand-sub").textContent = T.subtitle;
+  // 自動跳「當天」（裝置日期；旅程外 fallback Day 1）
+  var ti = todayIso();
+  var idx = T.days.findIndex(function (d) { return isoOf(d) === ti; });
+  state.dayIdx = idx >= 0 ? idx : 0;
+  loadWeatherCache();
+  renderStrip();
+  setView("day");
+  fetchWeather();
+
+  // PWA service worker
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+})();

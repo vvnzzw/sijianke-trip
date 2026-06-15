@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#0F6E56"/>
+  <!-- 雪山 -->
+  <path d="M96 360 L196 196 L268 296 L316 232 L416 360 Z" fill="#9FE1CB"/>
+  <path d="M196 196 L228 248 L196 268 L168 244 Z" fill="#ffffff"/>
+  <path d="M316 232 L340 270 L316 286 L296 264 Z" fill="#ffffff"/>
+  <!-- 蜿蜒自駕道路 -->
+  <path d="M150 432 C 230 400, 230 360, 300 348 C 360 338, 380 312, 392 288"
+        fill="none" stroke="#FAC775" stroke-width="22" stroke-linecap="round" stroke-dasharray="4 30"/>
+  <path d="M150 432 C 230 400, 230 360, 300 348 C 360 338, 380 312, 392 288"
+        fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 36" opacity="0.0"/>
+</svg>

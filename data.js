@@ -1,0 +1,187 @@
+// 四賤客小旅行 — 行程與餐廳資料（純資料層，出發前校對只動這個檔）
+// 營業時間為快照，checked 為查核日，出發前需再確認；hours 字串可被 app.js 推算「營業中/已打烊」
+// nav/embed 用 Google Maps 查詢字串（避免座標誤差）；coord 僅供天氣（Open-Meteo）使用
+// veg: true=素食友善(有蔬食可吃) / 'partial'=有少量蔬食副餐 / false=不友善
+
+window.TRIP = {
+  title: "四賤客小旅行",
+  subtitle: "東北自駕 ・ 6/21 – 6/29",
+  year: 2026,
+  // 嵌入式地圖用：填入你的 Google Maps Embed API key（免費、需鎖網域）。留空則地圖區塊顯示佔位＋導航 fallback
+  mapsEmbedKey: "",
+  days: [
+    {
+      day: 1, date: "6/21", weekday: "日",
+      coord: { lat: 39.72, lng: 140.66 }, // 田澤湖
+      route: "青森機場 → 龜之井酒店 田澤湖",
+      hotel: "龜之井酒店 田澤湖", driveTime: "約 2.5–3h",
+      pace: "落地取車後直接南下，不再加景點；中途休息 1 次即可。18:30 左右進飯店最舒服。",
+      lunch: "機上或機場簡單吃；出關後肚子餓，途中休息站補一餐即可。",
+      dinner: "飯店晚餐（已含）。晚餐後可泡湯，宵夜有免費擔擔麵。",
+      rainPlan: "若班機延誤，全程以進飯店為目標，取消任何中途停留。",
+      spots: [
+        { name: "青森機場", q: "青森空港" },
+        { name: "龜之井酒店 田澤湖", q: "亀の井ホテル 田沢湖" }
+      ],
+      restaurants: [
+        { name: "道の駅 こさか七滝", type: "休息站・輕食", area: "小坂（沿途）", hours: "09:00–17:00", closedDay: "不定休", veg: "partial", checked: "6/15", note: "南下途中補給、上廁所、簡單吃的點。", q: "道の駅 こさか七滝" }
+      ]
+    },
+    {
+      day: 2, date: "6/22", weekday: "一",
+      coord: { lat: 39.72, lng: 140.66 },
+      route: "田澤湖基地日：乳頭溫泉 / 田澤湖 / 角館 三選二",
+      hotel: "龜之井酒店 田澤湖", driveTime: "全日合計約 1–1.5h",
+      pace: "今天不要排滿。上午鶴之湯，下午田澤湖環湖或角館武家屋敷二選一。",
+      lunch: "方案 A：田澤湖湖畔咖啡或簡餐。方案 B：角館吃比內地雞、稻庭烏龍或在地定食。",
+      dinner: "飯店晚餐（已含）。今天建議早點回飯店泡湯，不要硬塞男鹿半島。",
+      rainPlan: "下雨優先改角館散步與咖啡；天氣佳再以湖景或露天風呂為主。",
+      spots: [
+        { name: "鶴之湯溫泉", q: "鶴の湯温泉" },
+        { name: "田澤湖辰子像", q: "たつこ像 田沢湖" },
+        { name: "角館武家屋敷", q: "角館武家屋敷" }
+      ],
+      restaurants: [
+        { name: "ORAE（田沢湖畔）", type: "湖景咖啡・啤酒・簡餐", area: "田澤湖畔", hours: "11:00–18:00", closedDay: "週四", veg: "partial", checked: "6/15", note: "湖邊景觀位，地啤＋簡餐，方案 A 首選。", q: "ORAE 田沢湖" },
+        { name: "桜の里（角館）", type: "稻庭烏龍・比內地雞", area: "角館 武家屋敷通", hours: "10:00–17:00", closedDay: "不定休", veg: "partial", checked: "6/15", note: "稻庭烏龍清爽，方便素可點素烏龍。", q: "桜の里 角館" }
+      ]
+    },
+    {
+      day: 3, date: "6/23", weekday: "二",
+      coord: { lat: 39.70, lng: 141.15 }, // 盛岡
+      route: "田澤湖 → 角館（若前一天未去） → Dormy Inn 盛岡",
+      hotel: "Dormy Inn 盛岡", driveTime: "主移動約 1.5h",
+      pace: "上午慢慢吃早餐後退房。若昨天沒去角館，補逛 1.5–2h 後進盛岡，15:00 入住最理想。",
+      lunch: "角館午餐或途中休息站簡單吃；不要特地繞路找名店。",
+      dinner: "盛岡市區自理。建議步行吃『冷麵 + 燒肉』，再接第二攤居酒屋。",
+      rainPlan: "下雨幾乎不受影響，今天本來就是移動加城市夜生活日。",
+      spots: [
+        { name: "Dormy Inn 盛岡", q: "ドーミーイン盛岡" }
+      ],
+      restaurants: [
+        { name: "盛樓閣 燒肉", type: "燒肉・盛岡冷麵", area: "盛岡站前", hours: "11:00–翌02:00", closedDay: "無休", veg: "partial", checked: "6/15", note: "燒肉＋名物冷麵，站前步行可達；素者可點冷麵蔬菜版詢問。", q: "盛楼閣 盛岡" },
+        { name: "ぴょんぴょん舎 盛岡站前店", type: "盛岡冷麵・燒肉", area: "盛岡站前", hours: "11:00–22:00", closedDay: "無休", veg: "partial", checked: "6/15", note: "冷麵代表店，第一晚冷麵＋燒肉首選。", q: "ぴょんぴょん舎 盛岡駅前店" },
+        { name: "盛岡站前居酒屋", type: "居酒屋（第二攤）", area: "盛岡站前", hours: "依店家", closedDay: "—", veg: "partial", checked: "6/15", note: "冷麵燒肉後的續攤搜尋用，現場挑。", q: "盛岡駅前 居酒屋" }
+      ]
+    },
+    {
+      day: 4, date: "6/24", weekday: "三",
+      coord: { lat: 39.70, lng: 141.15 },
+      route: "盛岡 → 宮古淨土之濱 → 盛岡",
+      hotel: "Dormy Inn 盛岡", driveTime: "來回約 3.5–4h",
+      pace: "全程最長單日往返。09:00 出發、11:30 抵達、14:30 離開、17:00 前回盛岡最舒服。",
+      lunch: "宮古或海邊簡單吃海鮮丼、烤魚、定食即可，不必排隊名店。",
+      dinner: "盛岡市區自理。今晚可換一家居酒屋或燒肉，讓兩晚口味有變化。",
+      rainPlan: "遇大雨或海邊風太大，改『盛岡市區慢遊 + 岩手縣立美術館 / 咖啡』。",
+      spots: [
+        { name: "淨土之濱", q: "浄土ヶ浜" },
+        { name: "岩手縣立美術館", q: "岩手県立美術館" }
+      ],
+      restaurants: [
+        { name: "魚菜市場 ねまれや", type: "海鮮丼（自選）", area: "宮古 魚菜市場", hours: "07:00–14:00", closedDay: "週三", veg: false, checked: "6/15", note: "宮古名物『のっけ丼』自選海鮮，午餐前抵達較佳。", q: "宮古市魚菜市場" },
+        { name: "浄土ヶ浜レストハウス", type: "海鮮定食・輕食", area: "淨土之濱", hours: "09:00–16:00", closedDay: "無休", veg: "partial", checked: "6/15", note: "景點旁，海景座位，省繞路。", q: "浄土ヶ浜レストハウス" }
+      ]
+    },
+    {
+      day: 5, date: "6/25", weekday: "四",
+      coord: { lat: 40.52, lng: 140.92 }, // 奧入瀨
+      route: "盛岡 → 十和田市現代美術館 → 星野集團 奧入瀨溪流飯店",
+      hotel: "星野集團 奧入瀨溪流飯店", driveTime: "約 2.5h（不含看展）",
+      pace: "09:30 左右出發。美術館停留 1.5–2h，下午 15:00 入住星野，保留飯店設施時間。",
+      lunch: "十和田市現代美術館周邊簡餐或咖啡即可，今天重點在下午入住後放鬆。",
+      dinner: "飯店晚餐（已含）。晚餐前後都很適合泡湯、逛大廳、喝一杯。",
+      rainPlan: "下雨今天更輕鬆；美術館 + 飯店幾乎不受影響。",
+      spots: [
+        { name: "十和田市現代美術館", q: "十和田市現代美術館" },
+        { name: "星野集團 奧入瀨溪流飯店", q: "星野リゾート 奥入瀬渓流ホテル" }
+      ],
+      restaurants: [
+        { name: "司 バラ焼き大衆食堂", type: "十和田名物 牛バラ焼き", area: "十和田市區", hours: "11:00–22:00", closedDay: "不定休", veg: false, checked: "6/15", note: "十和田名物烤牛肉洋蔥，重口味男生喜歡。", q: "司 バラ焼き大衆食堂 十和田" },
+        { name: "Cube Cafe（美術館旁）", type: "咖啡・輕食", area: "十和田市現代美術館旁", hours: "10:00–17:00", closedDay: "週一", veg: true, checked: "6/15", note: "看展後輕食咖啡，方便素友善。", q: "十和田市現代美術館 カフェ" }
+      ]
+    },
+    {
+      day: 6, date: "6/26", weekday: "五",
+      coord: { lat: 40.52, lng: 140.92 },
+      route: "奧入瀨溪流深度日",
+      hotel: "星野集團 奧入瀨溪流飯店", driveTime: "幾乎不開車；飯店接駁或短距離移動",
+      pace: "整趟靈魂日，不要排滿。只做一段 1–2h 步道，其餘交給咖啡、泡湯、發呆。",
+      lunch: "飯店內或十和田湖周邊簡單吃即可；不要為了午餐特別跑遠。",
+      dinner: "飯店晚餐（已含）。這晚最適合兄弟喝酒聊天。",
+      rainPlan: "小雨反而更美；雨勢大就縮成短距離散步 + 飯店設施日。",
+      spots: [
+        { name: "石戶休憩所", q: "石ヶ戸休憩所 奥入瀬" },
+        { name: "雲井瀑布", q: "雲井の滝 奥入瀬" },
+        { name: "銚子大瀑布", q: "銚子大滝 奥入瀬" }
+      ],
+      restaurants: [
+        { name: "奥入瀬湧水館 / 渓流カフェ", type: "咖啡・輕食", area: "奧入瀨溪流沿線", hours: "09:00–16:30", closedDay: "不定休", veg: true, checked: "6/15", note: "步道中途休息，湧水咖啡，素友善。", q: "奥入瀬湧水館" },
+        { name: "十和田湖畔 食事處", type: "定食・蕎麥", area: "十和田湖 休屋", hours: "10:00–15:00", closedDay: "不定休", veg: "partial", checked: "6/15", note: "若散步到湖畔可午餐，蕎麥清爽。", q: "十和田湖 休屋 食事処" }
+      ]
+    },
+    {
+      day: 7, date: "6/27", weekday: "六",
+      coord: { lat: 40.82, lng: 140.74 }, // 青森
+      route: "奧入瀨 → 弘前 → ReLabo Medical Spa & Stay 青森",
+      hotel: "ReLabo Medical Spa & Stay", driveTime: "約 2h",
+      pace: "10:00 左右離開奧入瀨。弘前只排城跡、公園前星巴克與簡單午餐，不要塞太滿。",
+      lunch: "弘前市區洋食、蘋果系餐點、咖啡輕食都適合。",
+      dinner: "青森市區自理。入住後先用 SPA 緩一下，晚上再出去找海鮮或居酒屋。",
+      rainPlan: "下雨弘前仍可保留，改洋館散步、咖啡與市區短停留。",
+      spots: [
+        { name: "弘前城", q: "弘前城" },
+        { name: "星巴克 弘前公園前店", q: "スターバックス 弘前公園前店" },
+        { name: "ReLabo Medical Spa & Stay", q: "ReLabo Medical Spa Stay 青森" }
+      ],
+      restaurants: [
+        { name: "レストラン山崎", type: "法式・蘋果料理", area: "弘前市區", hours: "11:30–20:30", closedDay: "週一", veg: "partial", checked: "6/15", note: "弘前洋食代表，名物嘟嚕嚕蘋果冷湯。", q: "レストラン山崎 弘前" },
+        { name: "タムラファーム アップルパイ", type: "蘋果派・咖啡", area: "弘前", hours: "10:00–18:00", closedDay: "不定休", veg: true, checked: "6/15", note: "弘前蘋果派輕食，素友善。", q: "タムラファーム 弘前" },
+        { name: "青森站周邊海鮮居酒屋", type: "海鮮・居酒屋", area: "青森站周邊", hours: "依店家", closedDay: "—", veg: "partial", checked: "6/15", note: "入住 SPA 後晚餐搜尋用，現場挑。", q: "青森駅 海鮮 居酒屋" }
+      ]
+    },
+    {
+      day: 8, date: "6/28", weekday: "日",
+      coord: { lat: 40.82, lng: 140.74 },
+      route: "青森 → 八戶館鼻岸壁朝市 → 青森",
+      hotel: "ReLabo Medical Spa & Stay", driveTime: "單程約 1.5h，來回約 3h",
+      pace: "不建議 04:00 就出發。05:00 出門、06:30 抵達最實際。朝市逛 1.5–2h 就夠，回青森後下午務必放慢。",
+      lunch: "早餐直接在八戶朝市解決；中午還餓，青森站周邊隨意補輕食即可。",
+      dinner: "青森市區自理。今天不建議排高難度餐廳，找車站附近居酒屋最輕鬆。",
+      rainPlan: "大雨朝市體驗會下降，可改青森市區『睡魔之家 + A-FACTORY + 咖啡』慢遊。",
+      spots: [
+        { name: "館鼻岸壁朝市", q: "館鼻岸壁朝市" },
+        { name: "睡魔之家 WA RASSE", q: "ねぶたの家 ワ・ラッセ" },
+        { name: "A-FACTORY", q: "A-FACTORY 青森" }
+      ],
+      restaurants: [
+        { name: "館鼻岸壁朝市（攤販）", type: "朝市小吃（早餐）", area: "八戶 館鼻", hours: "週日 黎明–09:00", closedDay: "僅週日營業（約3月中–12月）", veg: "partial", checked: "6/15", note: "邊走邊吃，現金為主；你們這天是週日可行。", q: "館鼻岸壁朝市" },
+        { name: "青森魚菜センター（のっけ丼）", type: "自選海鮮丼", area: "青森站附近", hours: "07:00–16:00", closedDay: "週二", veg: false, checked: "6/15", note: "買票自選配料的のっけ丼，午餐補食首選。", q: "青森魚菜センター" },
+        { name: "A-FACTORY", type: "蘋果氣泡酒・輕食", area: "青森站旁", hours: "10:00–20:00", closedDay: "無休", veg: true, checked: "6/15", note: "蘋果西打試飲＋伴手，下午放慢點。", q: "A-FACTORY 青森" }
+      ]
+    },
+    {
+      day: 9, date: "6/29", weekday: "一",
+      coord: { lat: 40.82, lng: 140.74 },
+      route: "青森市區 → 青森縣立美術館（視時間） → 青森機場",
+      hotel: "—", driveTime: "市區到機場約 30 分鐘內",
+      pace: "輕鬆收尾。早餐吃飯店，時間充裕再去青森縣立美術館；建議 13:30 前完成還車。",
+      lunch: "機場或機上解決即可，不需要特地再拉出去吃一餐。",
+      dinner: "—",
+      rainPlan: "想更輕鬆就省略美術館，市區補貨後去機場。",
+      spots: [
+        { name: "青森縣立美術館", q: "青森県立美術館" },
+        { name: "青森機場", q: "青森空港" }
+      ],
+      restaurants: [
+        { name: "青森縣立美術館 cafe 4匹の猫", type: "咖啡・輕食", area: "青森縣立美術館", hours: "09:30–17:00", closedDay: "每月第2・4個週一", veg: true, checked: "6/15", note: "看展順便輕食，素友善；美術館休館日需注意。", q: "青森県立美術館 カフェ" }
+      ]
+    }
+  ],
+  // 出發前最後確認清單（PDF 既有）
+  preTripChecks: [
+    "6/28 館鼻岸壁朝市：每年約 3 月中到 12 月、週日黎明到 9:00；這天是週日可行。",
+    "十和田市現代美術館：9:00–17:00，週一休館；6/25 週四可進。",
+    "睡魔之家 WA RASSE：5–8 月 9:00–19:00，最後入館 18:30。",
+    "青森縣立美術館：通常 9:30–17:00，固定休館為每月第 2、4 個週一；6/29 通常可安排，仍建議出發前最後確認。"
+  ]
+};
