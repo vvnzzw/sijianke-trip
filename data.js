@@ -8,7 +8,7 @@ window.TRIP = {
   subtitle: "東北自駕 ・ 6/21 – 6/29",
   year: 2026,
   // 嵌入式地圖用：填入你的 Google Maps Embed API key（免費、需鎖網域）。留空則地圖區塊顯示佔位＋導航 fallback
-  mapsEmbedKey: "",
+  mapsEmbedKey: "AIzaSyAscvTC2Vq2WvI1z4W_APZ06bk4E5um1fk",
   days: [
     {
       day: 1, date: "6/21", weekday: "日",
