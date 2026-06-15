@@ -1,10 +1,12 @@
 /* 四賤客小旅行 — 東北旅途感主題、深淺色自適應、自駕友善大字級 */
 :root {
-  --teal-50:#E1F5EE; --teal-200:#9FE1CB; --teal-400:#1D9E75; --teal-600:#0F6E56; --teal-800:#085041;
-  --amber-50:#FAEEDA; --amber-200:#FAC775; --amber-700:#854F0B;
-  --blue-50:#E6F1FB; --blue-600:#185FA5;
-  --bg:#f7f5ef; --surface:#ffffff; --surface-2:#f1efe8; --surface-3:#e7e4da;
-  --text:#2b2a26; --text-2:#5f5e5a; --text-3:#908e86; --border:rgba(0,0,0,.10); --border-2:rgba(0,0,0,.18);
+  /* 深林墨綠（穩重）：teal-600/400 為填色，green-text 為綠色文字 */
+  --teal-50:#E7EDE7; --teal-200:#A7C2B3; --teal-400:#3C5F4D; --teal-600:#2E4A3C; --teal-800:#223A2E;
+  --green-text:#2E4A3C;
+  --amber-50:#ECE3D1; --amber-200:#CDBA92; --amber-700:#6E5A38;
+  --blue-50:#E7E9EC; --blue-600:#4F6173;
+  --bg:#F2EEE5; --surface:#FBFAF5; --surface-2:#ECE7DB; --surface-3:#E0DACB;
+  --text:#2b2a26; --text-2:#5f5b52; --text-3:#8c867b; --border:rgba(60,50,30,.12); --border-2:rgba(60,50,30,.20);
   /* 字級基準（自駕一眼可讀） */
   --fs-title:24px; --fs-route:22px; --fs-section:17px; --fs-body:16px; --fs-btn:17px; --fs-small:14px;
   --radius:12px; --radius-sm:8px;
@@ -13,7 +15,10 @@
   :root {
     --bg:#16181a; --surface:#1f2225; --surface-2:#262a2e; --surface-3:#2e3338;
     --text:#ececec; --text-2:#b6b8ba; --text-3:#86898c; --border:rgba(255,255,255,.12); --border-2:rgba(255,255,255,.22);
-    --teal-50:#0c3a30; --teal-200:#1d7a5e; --amber-50:#3a2c10; --blue-50:#10243a;
+    --teal-50:#20302A; --teal-200:#7FA08E; --teal-400:#3C5F4D; --teal-600:#355A47; --teal-800:#223A2E;
+    --green-text:#8FB7A3;
+    --amber-50:#2E2A1E; --amber-200:#5A4E36; --amber-700:#D2BE96;
+    --blue-50:#232A30; --blue-600:#9FB1C0;
   }
 }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -28,7 +33,7 @@ body {
 /* 頂部 */
 header.topbar { position:sticky; top:0; z-index:20; background:var(--bg); padding:14px 16px 0; }
 .topbar-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-.brand h1 { margin:0; font-size:var(--fs-title); font-weight:700; color:var(--teal-600); letter-spacing:.5px; }
+.brand h1 { margin:0; font-size:var(--fs-title); font-weight:700; color:var(--green-text); letter-spacing:.5px; }
 .brand .sub { font-size:var(--fs-small); color:var(--text-3); margin-top:2px; }
 .icon-btn { font-size:20px; color:var(--text-2); border:1px solid var(--border-2); background:var(--surface);
   padding:9px 11px; border-radius:var(--radius-sm); cursor:pointer; }
@@ -70,7 +75,7 @@ main { padding:18px 16px 40px; }
 .stat .v { font-size:18px; font-weight:600; margin-top:2px; }
 
 .note { border-left:4px solid var(--teal-200); padding:6px 0 6px 14px; margin-bottom:12px; }
-.note .lab { font-size:15px; font-weight:500; color:var(--teal-600); margin-bottom:2px; }
+.note .lab { font-size:15px; font-weight:500; color:var(--green-text); margin-bottom:2px; }
 .note.rain { border-left-color:var(--amber-200); }
 .note.rain .lab { color:var(--amber-700); }
 .note .txt { font-size:var(--fs-body); color:var(--text-2); line-height:1.6; }
@@ -92,10 +97,10 @@ main { padding:18px 16px 40px; }
 .rcard .rn { font-size:18px; font-weight:600; }
 .rcard .rt { font-size:14px; color:var(--text-3); margin-top:2px; }
 .badge { font-size:13px; padding:5px 10px; border-radius:var(--radius-sm); white-space:nowrap; }
-.badge.open { color:var(--teal-600); background:var(--teal-50); }
+.badge.open { color:var(--green-text); background:var(--teal-50); }
 .badge.closed { color:var(--amber-700); background:var(--amber-50); }
 .badge.unknown { color:var(--text-2); background:var(--surface-2); }
-.veg { font-size:13px; color:var(--teal-600); background:var(--teal-50); padding:3px 8px; border-radius:var(--radius-sm); margin-left:6px; }
+.veg { font-size:13px; color:var(--green-text); background:var(--teal-50); padding:3px 8px; border-radius:var(--radius-sm); margin-left:6px; }
 .rhours { font-size:15px; color:var(--text-2); margin:12px 0; }
 .rhours .chk { color:var(--text-3); }
 .rnote { font-size:var(--fs-small); color:var(--text-2); margin-bottom:12px; }
@@ -107,6 +112,35 @@ main { padding:18px 16px 40px; }
 
 .disclaimer { font-size:13px; color:var(--text-3); background:var(--surface-2); border-radius:var(--radius-sm);
   padding:10px 12px; margin-bottom:16px; }
+
+/* 天氣連動雨備提示橫幅 */
+.rain-banner { display:flex; gap:8px; align-items:flex-start; font-size:var(--fs-body); line-height:1.55;
+  color:var(--amber-700); background:var(--amber-50); border:1px solid var(--amber-200); border-radius:var(--radius);
+  padding:12px 14px; margin:0 0 14px; }
+
+/* 未來時段降雨 逐時長條 */
+.rain-hours { border:1px solid var(--amber-200); background:var(--amber-50); border-radius:var(--radius);
+  padding:12px 14px; margin:0 0 14px; }
+.rh-head { display:flex; align-items:center; gap:6px; font-size:15px; font-weight:500; color:var(--amber-700); margin-bottom:10px; }
+.rh-bars { display:flex; align-items:flex-start; gap:6px; }
+.rh-col { flex:1; text-align:center; }
+.rh-barwrap { height:48px; display:flex; align-items:flex-end; justify-content:center; }
+.rh-bar { width:100%; border-radius:3px; }
+.rh-pct { font-size:11px; color:var(--amber-700); margin-top:3px; }
+.rh-hr { font-size:11px; color:var(--text-3); }
+.rh-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:var(--text-2); }
+.rh-legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
+.rh-sum { font-size:13px; color:var(--amber-700); margin-top:8px; }
+
+/* 日文溝通卡 */
+.phrase { display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:12px 14px; margin-bottom:8px; }
+.phrase .jp { font-size:18px; font-weight:500; }
+.phrase .zh { font-size:var(--fs-small); color:var(--text-2); margin-top:2px; }
+.phrase > div:first-child { flex:1; }
+.copy-btn { flex:0 0 auto; font-size:var(--fs-small); color:var(--text-2); background:transparent;
+  border:1px solid var(--border-2); padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer; min-height:40px; }
+.copy-btn:active { transform:scale(.97); }
 
 /* 總覽表 */
 .overview-day { border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px; background:var(--surface); cursor:pointer; }

@@ -26,7 +26,9 @@
     cloud: svg('<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 18z"/>'),
     rain: svg('<path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 15"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/>'),
     snow: svg('<path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A3.5 3.5 0 0 1 17 15"/><path d="M10 19h.01M14 19h.01M12 21h.01"/>'),
-    grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>')
+    grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+    alert: svg('<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>'),
+    chat: svg('<path d="M4 5h16v11H8l-4 4z"/>')
   };
 
   // ---- 工具 ----
@@ -100,6 +102,7 @@
       var c = groups[key];
       var url = "https://api.open-meteo.com/v1/forecast?latitude=" + c.lat + "&longitude=" + c.lng +
         "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+        "&hourly=precipitation_probability" +
         "&timezone=Asia%2FTokyo&start_date=" + start + "&end_date=" + end;
       fetch(url).then(function (r) { return r.json(); }).then(function (j) {
         if (!j.daily) return;
@@ -110,6 +113,9 @@
             lo: Math.round(dd.temperature_2m_min[i]), pop: dd.precipitation_probability_max[i]
           };
         }
+        if (j.hourly && j.hourly.time) { // 逐時降雨機率（整段行程）
+          weatherCache["h|" + key] = { time: j.hourly.time, prob: j.hourly.precipitation_probability };
+        }
         weatherCache._fetched = todayIso() + " " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes());
         saveWeatherCache();
         if (state.view === "day") renderDay(); // 抓到後刷新當前天氣
@@ -119,6 +125,19 @@
   function weatherFor(day) {
     var key = day.coord.lat + "," + day.coord.lng + "|" + isoOf(day);
     return weatherCache[key] || null;
+  }
+  // 取某天 08–20 時的逐時降雨機率（每 2 小時取樣）
+  function hourlyForDay(day) {
+    var h = weatherCache["h|" + day.coord.lat + "," + day.coord.lng];
+    if (!h || !h.time) return null;
+    var iso = isoOf(day), out = [];
+    for (var i = 0; i < h.time.length; i++) {
+      if (h.time[i].indexOf(iso) === 0) {
+        var hr = parseInt(h.time[i].slice(11, 13), 10);
+        if (hr >= 8 && hr <= 20 && hr % 2 === 0) out.push({ hour: hr, prob: h.prob[i] == null ? 0 : h.prob[i] });
+      }
+    }
+    return out.length ? out : null;
   }
 
   // ---- 渲染：日期切換列 ----
@@ -150,7 +169,7 @@
       (r.note ? '<div class="rnote">' + r.note + '</div>' : "") +
       map +
       '<div class="rbtns"><a class="btn-nav" href="' + navUrl(r.q) + '" target="_blank" rel="noopener">' + ICON.nav + ' 導航</a>' +
-      '<a class="btn-ghost" href="' + searchUrl(r.q) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">看詳情</a></div>' +
+      '<a class="btn-ghost" href="' + searchUrl(r.q) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Google Link</a></div>' +
       '</div>';
   }
 
@@ -163,7 +182,8 @@
       var ci = codeInfo(w.code);
       var warn = (w.pop != null && w.pop >= 60) || ci.icon === "rain";
       wHtml = '<div class="weather' + (warn ? " warn" : "") + '">' + ICON[ci.icon] + " " +
-        w.hi + "° / " + w.lo + "° ・ " + ci.txt + (w.pop != null ? " ・ 降雨" + w.pop + "%" : "") + "</div>";
+        w.hi + "° / " + w.lo + "° ・ " + ci.txt +
+        (w.pop != null ? ' ・ <span style="color:' + rainColor(w.pop) + ';font-weight:600">降雨' + w.pop + '%</span>' : "") + "</div>";
     } else {
       wHtml = '<div class="weather"><span class="muted">天氣載入中／離線無快取</span></div>';
     }
@@ -172,8 +192,14 @@
         '<a class="btn-nav" href="' + navUrl(s.q) + '" target="_blank" rel="noopener">' + ICON.nav + ' 導航</a></div>';
     }).join("");
     var rests = (d.restaurants || []).map(restaurantCard).join("");
+    // 天氣連動雨備提示：當日降雨機率達門檻 → 行程卡頂自動跳橫幅
+    var rainBanner = (w && w.pop != null && w.pop >= (T.rainThreshold || 60) && d.rainPlan)
+      ? '<div class="rain-banner">' + ICON.alert + ' <b>今日降雨機率 ' + w.pop + '%</b>，建議走雨備案：' + d.rainPlan + '</div>'
+      : '';
+    var rainHours = buildRainHours(d);
     $main.innerHTML =
       '<div class="day-head"><span class="day-meta">Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")</span>" + wHtml + "</div>" +
+      rainBanner + rainHours +
       '<h2 class="route">' + d.route + "</h2>" +
       '<div class="stat-row"><div class="stat drive"><div class="k">' + ICON.car + ' 開車</div><div class="v">' + d.driveTime + '</div></div>' +
       '<div class="stat hotel"><div class="k">' + ICON.bed + ' 住宿</div><div class="v">' + d.hotel + '</div></div></div>' +
@@ -190,6 +216,31 @@
   function noteRain(lab, txt) {
     if (!txt) return "";
     return '<div class="note rain"><div class="lab">' + ICON.umbrella + " " + lab + '</div><div class="txt">' + txt + "</div></div>";
+  }
+  // 降雨機率三層色階（穩重調）：低<30% 沉綠／中 30–59% 琥珀／高 ≥60% 磚紅
+  function rainColor(p) { return p >= 60 ? "#B05236" : (p >= 30 ? "#BE8A33" : "#5C8A6E"); }
+  // 未來幾小時降雨：08–20 時逐時降雨機率長條 + 色階 + 圖例 + 一句總結（無明顯降雨則不顯示）
+  function buildRainHours(d) {
+    var hrs = hourlyForDay(d);
+    if (!hrs) return "";
+    var maxP = hrs.reduce(function (m, x) { return Math.max(m, x.prob); }, 0);
+    if (maxP < 40) return ""; // 今日大致無雨，不佔版面
+    var bars = hrs.map(function (x) {
+      var col = rainColor(x.prob);
+      var h = Math.max(3, Math.round(x.prob / 100 * 48));
+      return '<div class="rh-col"><div class="rh-barwrap"><div class="rh-bar" style="height:' + h + 'px;background:' + col + '"></div></div>' +
+        '<div class="rh-pct" style="color:' + col + '">' + x.prob + '%</div><div class="rh-hr">' + pad(x.hour) + '</div></div>';
+    }).join("");
+    var legend = '<div class="rh-legend">' +
+      '<span><i style="background:#5C8A6E"></i>低 &lt;30%</span>' +
+      '<span><i style="background:#BE8A33"></i>中 30–59%</span>' +
+      '<span><i style="background:#B05236"></i>高 ≥60%</span></div>';
+    var firstHigh = hrs.filter(function (x) { return x.prob >= 60; })[0];
+    var sum = firstHigh
+      ? pad(firstHigh.hour) + ":00 起降雨機率達 " + maxP + "%，記得帶傘。"
+      : "時段內有零星雨機率（最高 " + maxP + "%）。";
+    return '<div class="rain-hours"><div class="rh-head">' + ICON.clock + ' 未來時段降雨</div>' +
+      '<div class="rh-bars">' + bars + '</div>' + legend + '<div class="rh-sum">' + sum + '</div></div>';
   }
 
   // ---- 渲染：9 天總覽 ----
@@ -217,6 +268,20 @@
     $main.innerHTML = '<div class="disclaimer">營業時間為快照、徽章為依裝置時間推算，僅供參考，請以現場為準。</div>' + html;
   }
 
+  // ---- 渲染：日文溝通卡 ----
+  function renderPocket() {
+    var cards = (T.phrases || []).map(function (g) {
+      var items = g.items.map(function (p) {
+        return '<div class="phrase" data-jp="' + p.jp.replace(/"/g, "&quot;") + '">' +
+          '<div class="jp">' + p.jp + '</div><div class="zh">' + p.zh + '</div>' +
+          '<button class="copy-btn" type="button">複製</button></div>';
+      }).join("");
+      return '<div class="section-title">' + ICON.chat + ' ' + g.cat + '</div>' + items;
+    }).join("");
+    $main.innerHTML =
+      '<div class="disclaimer">點「複製」可複製日文，給店員看或貼到翻譯。</div>' + cards;
+  }
+
   // ---- 視圖切換 ----
   function setView(v) {
     state.view = v;
@@ -226,6 +291,7 @@
     $strip.classList.toggle("hidden", v !== "day");
     if (v === "day") renderDay();
     else if (v === "overview") renderOverview();
+    else if (v === "pocket") renderPocket();
     else renderFood();
     window.scrollTo(0, 0);
   }
@@ -242,6 +308,16 @@
     state.dayIdx = +chip.getAttribute("data-idx"); renderStrip(); renderDay();
   });
   $main.addEventListener("click", function (e) {
+    // 複製日文短句
+    var cp = e.target.closest(".copy-btn");
+    if (cp) {
+      var ph = cp.closest(".phrase");
+      var jp = ph ? ph.getAttribute("data-jp") : "";
+      if (jp && navigator.clipboard) navigator.clipboard.writeText(jp).then(function () {
+        cp.textContent = "已複製"; setTimeout(function () { cp.textContent = "複製"; }, 1200);
+      });
+      return;
+    }
     var od = e.target.closest(".overview-day"); if (!od) return;
     state.dayIdx = +od.getAttribute("data-idx"); setView("day"); renderStrip();
   });
