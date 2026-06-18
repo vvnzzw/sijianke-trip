@@ -1,4 +1,4 @@
-// 四賤客小旅行 — 畫面與互動邏輯（vanilla JS，無框架）
+// 東北「四壯士」 — 畫面與互動邏輯（vanilla JS，無框架）
 (function () {
   "use strict";
   var T = window.TRIP;
@@ -198,7 +198,8 @@
       : '';
     var rainHours = buildRainHours(d);
     $main.innerHTML =
-      '<div class="day-head"><span class="day-meta">Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")</span>" + wHtml + "</div>" +
+      '<div class="day-head"><span class="day-meta">Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")" +
+        (d.region ? ' ・ ' + d.region : "") + "</span>" + wHtml + "</div>" +
       rainBanner + rainHours +
       '<h2 class="route">' + d.route + "</h2>" +
       '<div class="stat-row"><div class="stat drive"><div class="k">' + ICON.car + ' 開車</div><div class="v">' + d.driveTime + '</div></div>' +
@@ -249,7 +250,8 @@
       var w = weatherFor(d), wt = "";
       if (w) { var ci = codeInfo(w.code); wt = " ・ " + ci.txt + " " + w.hi + "°/" + w.lo + "°"; }
       return '<div class="overview-day" data-idx="' + i + '">' +
-        '<div class="oh"><div><div class="od">Day ' + d.day + " ・ " + d.date + " (" + d.weekday + ")" + wt + "</div>" +
+        '<div class="oh"><div><div class="od">Day ' + d.day + " ・ " + d.date + " (" + d.weekday + ")" +
+        (d.region ? " ・ " + d.region : "") + wt + "</div>" +
         '<div class="or">' + d.route + '</div></div></div>' +
         '<div class="om">' + ICON.car + " " + d.driveTime + " ・ " + ICON.bed + " " + d.hotel + "</div></div>";
     }).join("");
