@@ -1,5 +1,5 @@
-// 四賤客小旅行 — Service Worker（離線快取）
-var CACHE = "sjk-trip-v2";
+// 東北「四壯士」 — Service Worker（離線快取）
+var CACHE = "sjk-trip-v4";
 var ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js", "./data.js",
   "./manifest.json", "./icon.svg"
