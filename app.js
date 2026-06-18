@@ -197,9 +197,11 @@
       ? '<div class="rain-banner">' + ICON.alert + ' <b>今日降雨機率 ' + w.pop + '%</b>，建議走雨備案：' + d.rainPlan + '</div>'
       : '';
     var rainHours = buildRainHours(d);
+    var stn = stationOf(d);
+    var meta = 'Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")" +
+      (stn ? ' ・ 站 ' + stn.no : "") + (d.region ? ' ・ ' + d.region : "");
     $main.innerHTML =
-      '<div class="day-head"><span class="day-meta">Day ' + d.day + ' ・ ' + d.date + " (" + d.weekday + ")" +
-        (d.region ? ' ・ ' + d.region : "") + "</span>" + wHtml + "</div>" +
+      '<div class="day-head"><span class="day-meta">' + meta + "</span>" + wHtml + "</div>" +
       rainBanner + rainHours +
       '<h2 class="route">' + d.route + "</h2>" +
       '<div class="stat-row"><div class="stat drive"><div class="k">' + ICON.car + ' 開車</div><div class="v">' + d.driveTime + '</div></div>' +
@@ -207,8 +209,8 @@
       note("今日節奏", d.pace) + note("午餐", d.lunch) + note("晚餐", d.dinner) +
       noteRain("雨天備案", d.rainPlan) +
       (spots ? '<div class="section-title">' + ICON.pin + ' 景點導航</div>' + spots : "") +
-      (rests ? '<div class="section-title">' + ICON.food + ' 順路餐廳</div>' +
-        '<div class="disclaimer">營業時間為快照、徽章為依裝置時間推算，僅供參考，請以現場為準。</div>' + rests : "");
+      (rests ? '<details class="rest-supp"><summary>' + ICON.food + ' 補充：順路餐廳（' + d.restaurants.length + '）</summary>' +
+        '<div class="disclaimer">順路餐廳為補充參考；營業時間為快照、徽章為依裝置時間推算，請以現場為準。</div>' + rests + '</details>' : "");
   }
   function note(lab, txt) {
     if (!txt || txt === "—") return "";
@@ -244,20 +246,45 @@
       '<div class="rh-bars">' + bars + '</div>' + legend + '<div class="rh-sum">' + sum + '</div></div>';
   }
 
-  // ---- 渲染：9 天總覽 ----
+  // ---- 站別工具 ----
+  function stationOf(d) {
+    if (!T.stations) return null;
+    for (var i = 0; i < T.stations.length; i++) {
+      if (T.stations[i].days.indexOf(d.day) !== -1) return T.stations[i];
+    }
+    return null;
+  }
+  function dayByNo(n) { return T.days.filter(function (x) { return x.day === n; })[0]; }
+
+  // ---- 渲染：總覽（依四站分組） ----
+  function overviewDayRow(d) {
+    var i = T.days.indexOf(d);
+    var w = weatherFor(d), wt = "";
+    if (w) { var ci = codeInfo(w.code); wt = " ・ " + ci.txt + " " + w.hi + "°/" + w.lo + "°"; }
+    return '<div class="overview-day" data-idx="' + i + '">' +
+      '<div class="oh"><div><div class="od">Day ' + d.day + " ・ " + d.date + " (" + d.weekday + ")" + wt + "</div>" +
+      '<div class="or">' + d.route + '</div></div></div>' +
+      '<div class="om">' + ICON.car + " " + d.driveTime + " ・ " + ICON.bed + " " + d.hotel + "</div></div>";
+  }
   function renderOverview() {
-    var rows = T.days.map(function (d, i) {
-      var w = weatherFor(d), wt = "";
-      if (w) { var ci = codeInfo(w.code); wt = " ・ " + ci.txt + " " + w.hi + "°/" + w.lo + "°"; }
-      return '<div class="overview-day" data-idx="' + i + '">' +
-        '<div class="oh"><div><div class="od">Day ' + d.day + " ・ " + d.date + " (" + d.weekday + ")" +
-        (d.region ? " ・ " + d.region : "") + wt + "</div>" +
-        '<div class="or">' + d.route + '</div></div></div>' +
-        '<div class="om">' + ICON.car + " " + d.driveTime + " ・ " + ICON.bed + " " + d.hotel + "</div></div>";
-    }).join("");
+    var html;
+    if (T.stations && T.stations.length) {
+      html = T.stations.map(function (st) {
+        var rows = st.days.map(function (n) {
+          var d = dayByNo(n); return d ? overviewDayRow(d) : "";
+        }).join("");
+        return '<div class="station">' +
+          '<div class="station-head"><span class="st-no">站 ' + st.no + '</span>' +
+          '<div class="st-body"><div class="st-name">' + st.name + '</div>' +
+          '<div class="st-meta">' + st.dateRange + ' ・ ' + ICON.bed + ' ' + st.hotel + ' ×' + st.nights + ' 晚</div>' +
+          '</div></div>' + rows + '</div>';
+      }).join("");
+    } else {
+      html = T.days.map(overviewDayRow).join("");
+    }
     var checks = '<div class="checks"><div class="section-title">出發前最後確認</div><ul>' +
       T.preTripChecks.map(function (c) { return "<li>" + c + "</li>"; }).join("") + "</ul></div>";
-    $main.innerHTML = rows + checks;
+    $main.innerHTML = html + checks;
   }
 
   // ---- 渲染：全部餐廳 ----

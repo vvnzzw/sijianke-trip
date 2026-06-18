@@ -1,4 +1,4 @@
-/* 四賤客小旅行 — 東北旅途感主題、深淺色自適應、自駕友善大字級 */
+/* 東北「四壯士」 — 東北旅途感主題、深淺色自適應、自駕友善大字級 */
 :root {
   /* 深林墨綠（穩重）：teal-600/400 為填色，green-text 為綠色文字 */
   --teal-50:#E7EDE7; --teal-200:#A7C2B3; --teal-400:#3C5F4D; --teal-600:#2E4A3C; --teal-800:#223A2E;
@@ -113,6 +113,15 @@ main { padding:18px 16px 40px; }
 .disclaimer { font-size:13px; color:var(--text-3); background:var(--surface-2); border-radius:var(--radius-sm);
   padding:10px 12px; margin-bottom:16px; }
 
+/* 補充：順路餐廳（折疊，預設收合，樣式淡化於主行程之下） */
+.rest-supp { margin-top:20px; border-top:1px dashed var(--border-2); padding-top:6px; }
+.rest-supp > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:6px;
+  font-size:var(--fs-section); font-weight:500; color:var(--text-3); padding:12px 0; }
+.rest-supp > summary::-webkit-details-marker { display:none; }
+.rest-supp > summary::after { content:"展開"; margin-left:auto; font-size:13px; color:var(--text-3);
+  border:1px solid var(--border-2); border-radius:var(--radius-sm); padding:3px 10px; }
+.rest-supp[open] > summary::after { content:"收合"; }
+
 /* 天氣連動雨備提示橫幅 */
 .rain-banner { display:flex; gap:8px; align-items:flex-start; font-size:var(--fs-body); line-height:1.55;
   color:var(--amber-700); background:var(--amber-50); border:1px solid var(--amber-200); border-radius:var(--radius);
@@ -141,6 +150,16 @@ main { padding:18px 16px 40px; }
 .copy-btn { flex:0 0 auto; font-size:var(--fs-small); color:var(--text-2); background:transparent;
   border:1px solid var(--border-2); padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer; min-height:40px; }
 .copy-btn:active { transform:scale(.97); }
+
+/* 站別總覽 */
+.station { margin-bottom:22px; }
+.station-head { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; margin-bottom:10px;
+  background:var(--teal-600); border-radius:var(--radius); color:#fff; }
+.station-head .st-no { flex:0 0 auto; font-size:13px; font-weight:700; letter-spacing:.5px;
+  background:rgba(255,255,255,.18); padding:4px 9px; border-radius:var(--radius-sm); }
+.station-head .st-name { font-size:18px; font-weight:700; }
+.station-head .st-meta { font-size:13px; opacity:.9; margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.station .overview-day { margin-left:10px; }
 
 /* 總覽表 */
 .overview-day { border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px; background:var(--surface); cursor:pointer; }

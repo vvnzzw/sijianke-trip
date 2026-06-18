@@ -190,6 +190,13 @@ window.TRIP = {
       ]
     }
   ],
+  // 四站結構（依原行程：每站區域、日期區間、住宿與晚數、涵蓋哪幾天）
+  stations: [
+    { no: 1, name: "秋田・乳頭溫泉鄉", dateRange: "6/21–6/22", hotel: "龜之井酒店 田澤湖", nights: 2, days: [1, 2] },
+    { no: 2, name: "岩手・盛岡", dateRange: "6/23–6/24", hotel: "Dormy Inn 盛岡", nights: 2, days: [3, 4] },
+    { no: 3, name: "青森・奧入瀨／十和田", dateRange: "6/25–6/26", hotel: "星野集團 奧入瀨溪流飯店", nights: 2, days: [5, 6] },
+    { no: 4, name: "青森市區", dateRange: "6/27–6/29", hotel: "ReLabo Medical Spa & Stay", nights: 2, days: [7, 8, 9] }
+  ],
   // 出發前最後確認清單（PDF 既有）
   preTripChecks: [
     "6/28 館鼻岸壁朝市：每年約 3 月中到 12 月、週日黎明到 9:00；這天是週日可行。",
